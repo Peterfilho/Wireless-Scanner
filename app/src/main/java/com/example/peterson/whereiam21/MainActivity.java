@@ -73,7 +73,11 @@ public class MainActivity extends AppCompatActivity {
         for (ScanResult scanResult : results) {
 
             Log.d("Teste", scanResult.SSID);
-            arraylist.add(scanResult.SSID + " - " + scanResult.level);
+            arraylist.add(
+                                scanResult.SSID +
+                    "dBm:  " + scanResult.level +
+                    "MAC: " + scanResult.BSSID +
+                    "Chave: " + scanResult.capabilities);
             adapter.notifyDataSetChanged();
         }
 
