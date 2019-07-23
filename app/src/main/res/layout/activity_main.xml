@@ -14,7 +14,7 @@
         android:layout_gravity="bottom"
         android:layout_margin="15dp"
         android:background="@android:color/holo_blue_light"
-        android:text="Scan Wifi" />
+        android:text="@string/button_scan" />
 
     <ListView
         android:id="@+id/wifiList"

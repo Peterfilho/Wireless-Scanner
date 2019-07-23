@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Where I Am 2.1</string>
+    <string name="button_scan">Scan wireless networks</string>
 </resources>
