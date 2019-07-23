@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -28,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private List<ScanResult> results;
     private ArrayList<String> arraylist = new ArrayList<>();
     private ArrayAdapter adapter;
-   private BroadcastReceiver wifiReceiver;
+    private BroadcastReceiver wifiReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,40 +54,31 @@ public class MainActivity extends AppCompatActivity {
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arraylist);
         listView.setAdapter(adapter);
-
-
-
-
-        scanWifi();
-
     }
 
     private void scanWifi () {
         arraylist.clear();
         registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
-            wifiManager.startScan();
+        wifiManager.startScan();
 
-        Toast.makeText(this, "Procurando redes WiFi ..", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Procurando redes wireless ..", Toast.LENGTH_SHORT).show();
         results = wifiManager.getScanResults();
+
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 
         for (ScanResult scanResult : results) {
 
-            Log.d("Teste", scanResult.SSID);
             arraylist.add(
                                 scanResult.SSID +
                     "dBm:  " + scanResult.level +
                     "MAC: " + scanResult.BSSID +
                     "Chave: " + scanResult.capabilities);
             adapter.notifyDataSetChanged();
+
+            Log.d("SSID", wifiInfo.getSSID());
+            Log.d("dBm", String.valueOf(wifiInfo.getRssi()));
+            Log.d("MAC", wifiInfo.getMacAddress());
         }
-
     }
-
-
 }
-
-
-
-
-

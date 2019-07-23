@@ -7,20 +7,19 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <ListView
-        android:id="@+id/wifiList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-
     <Button
         android:id="@+id/scanBtn"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_gravity="bottom"
         android:layout_margin="15dp"
-        android:background="@android:color/holo_red_light"
-        android:text="Scan Wifi"/>
+        android:background="@android:color/holo_blue_light"
+        android:text="Scan Wifi" />
+
+    <ListView
+        android:id="@+id/wifiList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 
 </LinearLayout>
