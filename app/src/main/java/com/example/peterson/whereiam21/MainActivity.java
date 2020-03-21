@@ -15,14 +15,23 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import java.io.File;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver wifiReceiver;
     private  Integer sleepTime = 5;
     private Integer scanTimes = 4;
+    private String hora;
+    private String data;
+    private String datetime;
     private String tsi; //2a não deixa criar
     private String c7;
     private String f5;
@@ -51,14 +63,26 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        populateReferenceSignals();
-//       Log.d("DEBUG", " "+ referenceSignals);
-
         buttonScan = findViewById(R.id.scanBtn);
         buttonScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 scanWifi();
+            }
+        });
+
+        Switch aSwitch = (Switch) findViewById(R.id.switch1);
+        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    try {
+                        showMessage();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         });
 
@@ -70,6 +94,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void scanWifi () {
+
+        Toast.makeText(this, "Procurando redes ..", Toast.LENGTH_SHORT).show();
+
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         LocationManager service = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
 
@@ -80,26 +107,21 @@ public class MainActivity extends AppCompatActivity {
 //            startActivity(intent);
 //        }
 
-
         arraylist.clear();
 
         HashMap<String, ArrayList<Integer>> result = new HashMap<String, ArrayList<Integer>>();
         HashMap<String, Float> resultMedia = new HashMap<String, Float>();
-
 
         for (int scanIndex = 0; scanIndex < scanTimes; scanIndex++) {
             registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
             wifiManager.startScan();
 
-            //Toast.makeText(this, "Procurando redes wireless ..", Toast.LENGTH_SHORT).show();
             results = wifiManager.getScanResults();
 
             //WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 
-
             Log.d("DEBUG", results.size() + "");
-
 
             for (ScanResult scanResult : results) {
 
@@ -195,4 +217,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public static final String DATE_FORMAT_1 = "hh:mm a";
+    public static final String DATE_FORMAT_2 = "yyyy-MM-dd";
+
+    public static String getCurrentTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_1);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-03:00"));
+        Date today = Calendar.getInstance().getTime();
+        return dateFormat.format(today);
+    }
+
+    public static String getCurrentDate() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_2);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT-03:00"));
+        Date today = Calendar.getInstance().getTime();
+        return dateFormat.format(today);
+    }
+
+    private void showMessage() throws ExecutionException, InterruptedException {
+        hora = getCurrentTime();
+        data = getCurrentDate();
+        datetime = (data+" "+hora);
+
+        Toast.makeText(this, "Localização Ativada! "+datetime, Toast.LENGTH_SHORT).show();
+
+        SendData sendData = new HttpService("oi","oi", datetime).execute().get();
+    }
 }

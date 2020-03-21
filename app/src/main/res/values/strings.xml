@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Wireless Scanner</string>
-    <string name="button_scan">Scan wireless networks</string>
+    <string name="button_scan">Scan Networks</string>
+    <string name="inputText">Insira seu R.A</string>
+    <string name="activeLocalization">Ativar Localização</string>
+
+
 </resources>
