@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -22,6 +23,19 @@ import android.widget.Switch;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -30,6 +44,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -70,8 +85,9 @@ public class MainActivity extends AppCompatActivity {
                 scanWifi();
             }
         });
+        EditText editText = findViewById(R.id.ra);
 
-        Switch aSwitch = (Switch) findViewById(R.id.switch1);
+        Switch aSwitch = findViewById(R.id.switch1);
         aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
@@ -85,6 +101,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+//        editText.setText("9988770");
+//        To not auto open keyboard
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
         listView = findViewById(R.id.wifiList);
 
@@ -238,9 +259,53 @@ public class MainActivity extends AppCompatActivity {
         hora = getCurrentTime();
         data = getCurrentDate();
         datetime = (data+" "+hora);
-
+        datetime = datetime.substring(0,datetime.length() -3);
+        Integer ra = 9988770;
+        String search = "-100,-67,-63,-49,-53,-48";
         Toast.makeText(this, "Localização Ativada! "+datetime, Toast.LENGTH_SHORT).show();
+        Log.d("DEBUG", "Busca: "+search+", ra: "+ra+", Data: "+datetime);
+        sendData(search, ra, datetime);
+    }
 
-        SendData sendData = new HttpService("oi","oi", datetime).execute().get();
+    private void sendData(final String busca, final Integer user_id, final String data) {
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url ="http://192.168.0.20:5000/api/v1/resources/positions/app";
+
+        JSONObject js = new JSONObject();
+        try {
+            js.put("user_id", user_id);
+            js.put("search", busca);
+            js.put("date", data);
+            Log.d("DEBUG json: ",""+js);
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST,url,js,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d("DEBUG: ", response.toString());
+
+                        Log.d("DEBUG: ", "" + response.toString());
+
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("Error: ", "" + error.getMessage());
+            }
+        }) {
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+        };
+        queue.add(jsonObjectRequest);
     }
 }
