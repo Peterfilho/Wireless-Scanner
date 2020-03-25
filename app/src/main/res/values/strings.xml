@@ -3,6 +3,10 @@
     <string name="button_scan">Scan Networks</string>
     <string name="inputText">Insira seu R.A</string>
     <string name="activeLocalization">Ativar Localização</string>
-
+    <string name="TextView">Insira seu R.A</string>
+    <string name="Info">Mais informações</string>
+    <string name="infotitle">Mais informações</string>
+    <string name="ok">Ok</string>
+    <string name="textinfo">Mais informações</string>
 
 </resources>

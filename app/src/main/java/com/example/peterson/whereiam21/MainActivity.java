@@ -1,17 +1,25 @@
 package com.example.peterson.whereiam21;
 
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.provider.Settings;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
@@ -61,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver wifiReceiver;
     private  Integer sleepTime = 5;
     private Integer scanTimes = 4;
+    private Integer postSleepTime = 5;
     private String hora;
     private String data;
     private String datetime;
@@ -78,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         buttonScan = findViewById(R.id.scanBtn);
         buttonScan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,33 +95,63 @@ public class MainActivity extends AppCompatActivity {
                 scanWifi();
             }
         });
-        EditText editText = findViewById(R.id.ra);
+        final EditText editText = findViewById(R.id.ra);
 
-        Switch aSwitch = findViewById(R.id.switch1);
+        hora = getCurrentTime();
+        data = getCurrentDate();
+        datetime = (data+" "+hora);
+        datetime = datetime.substring(0,datetime.length() -3);
+        //WC-M
+//        final String search = "-100,-67,-63,-49,-53,-48";
+        //B8B
+//        final String search = "-100,-72,-74,-59,-79,-100";
+
+        final Switch aSwitch = findViewById(R.id.switch1);
+
         aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    try {
-                        showMessage();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    final String ra = editText.getText().toString();
+                    final String search = "-100,-72,-74,-59,-79,-100";
+                    editText.setEnabled(false);
+                    switchOnMsg();
+                    sendData(ra, search, datetime);
+                }else {
+                    editText.setEnabled(true);
+                    switchOffMsg();
                 }
             }
         });
 
-
-//        editText.setText("9988770");
 //        To not auto open keyboard
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+//        To not turn in horizontal mode
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         listView = findViewById(R.id.wifiList);
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arraylist);
         listView.setAdapter(adapter);
+    }
 
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch (item.getItemId()) {
+//            case R.id.action_info:
+//                new info();
+//                return true;
+//        }
+//        return false;
+//    }
+
+    public Integer tryParse(Object obj) {
+        Integer retVal;
+        try {
+            retVal = Integer.parseInt((String) obj);
+        } catch (NumberFormatException nfe) {
+            retVal = 0; // or null if that is your preference
+        }
+        return retVal;
     }
 
     private void scanWifi () {
@@ -255,57 +295,77 @@ public class MainActivity extends AppCompatActivity {
         return dateFormat.format(today);
     }
 
-    private void showMessage() throws ExecutionException, InterruptedException {
+    public static class info extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage(R.string.infotitle)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            builder.setMessage(R.string.textinfo);
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+
+    private void testPost() throws ExecutionException, InterruptedException {
         hora = getCurrentTime();
         data = getCurrentDate();
         datetime = (data+" "+hora);
         datetime = datetime.substring(0,datetime.length() -3);
-        Integer ra = 9988770;
+        String ra = "9988770";
         String search = "-100,-67,-63,-49,-53,-48";
-        Toast.makeText(this, "Localização Ativada! "+datetime, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Localização Ativada!", Toast.LENGTH_SHORT).show();
         Log.d("DEBUG", "Busca: "+search+", ra: "+ra+", Data: "+datetime);
-        sendData(search, ra, datetime);
+        sendData(ra,search, datetime);
     }
 
-    private void sendData(final String busca, final Integer user_id, final String data) {
+    private void switchOffMsg(){
+        Toast.makeText(this, "Localização desativada!", Toast.LENGTH_SHORT).show();
+    }
 
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url ="http://192.168.0.20:5000/api/v1/resources/positions/app";
+    private void switchOnMsg(){
+        Toast.makeText(this, "Localização Ativada!", Toast.LENGTH_SHORT).show();
+    }
 
-        JSONObject js = new JSONObject();
-        try {
-            js.put("user_id", user_id);
-            js.put("search", busca);
-            js.put("date", data);
-            Log.d("DEBUG json: ",""+js);
-        }catch (JSONException e) {
-            e.printStackTrace();
-        }
+    private void sendData(final String user_id, final String busca, final String data) {
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST,url,js,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.d("DEBUG: ", response.toString());
+            RequestQueue queue = Volley.newRequestQueue(this);
+            String url = "http://192.168.0.20:5000/api/v1/resources/positions/app";
 
-                        Log.d("DEBUG: ", "" + response.toString());
-
-                    }
-                }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.d("Error: ", "" + error.getMessage());
+            JSONObject js = new JSONObject();
+            try {
+                js.put("user_id", user_id);
+                js.put("search", busca);
+                js.put("date", data);
+                Log.d("DEBUG json: ", "" + js);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        }) {
 
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                headers.put("Content-Type", "application/json; charset=utf-8");
-                return headers;
-            }
-        };
-        queue.add(jsonObjectRequest);
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, js,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Log.d("DEBUG: ", response.toString());
+                        }
+                    }, new Response.ErrorListener() {
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.d("Error: ", "" + error.getMessage());
+                }
+            }) {
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    HashMap<String, String> headers = new HashMap<String, String>();
+                    headers.put("Content-Type", "application/json; charset=utf-8");
+                    return headers;
+                }
+            };
+            queue.add(jsonObjectRequest);
     }
 }
